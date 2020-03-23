@@ -58,15 +58,10 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
   ScrollController _controller;
 
   @override
-  void initState() {
-    super.initState();
-    _controller = ScrollController(initialScrollOffset: _initialOffset);
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _initialOffset ??= _getMediaQueryData().size.width * widget.drawerFraction;
+    _controller ??= ScrollController(initialScrollOffset: _initialOffset);
   }
 
   MediaQueryData _getMediaQueryData() {
