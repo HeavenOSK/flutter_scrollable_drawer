@@ -54,30 +54,19 @@ class ScrollableDrawerScaffold extends StatefulWidget {
 }
 
 class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
-  double initialOffset;
-  ScrollController controller;
+  double _initialOffset;
+  ScrollController _controller;
 
-  void openDrawer() {
-    controller.animateTo(
-      initialOffset,
-      duration: widget.duration,
-      curve: Curves.linearToEaseOut,
-    );
-  }
-
-  void closeDrawer() {
-    controller.animateTo(
-      initialOffset,
-      duration: widget.duration,
-      curve: Curves.linearToEaseOut,
-    );
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController(initialScrollOffset: _initialOffset);
   }
 
   @override
   void didChangeDependencies() {
-    initialOffset ??= _getMediaQueryData().size.width * widget.drawerFraction;
-    controller ??= ScrollController(initialScrollOffset: initialOffset);
     super.didChangeDependencies();
+    _initialOffset ??= _getMediaQueryData().size.width * widget.drawerFraction;
   }
 
   MediaQueryData _getMediaQueryData() {
@@ -102,12 +91,28 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
     ]);
   }
 
+  void closeDrawer() {
+    _controller.animateTo(
+      _initialOffset,
+      duration: widget.duration,
+      curve: Curves.linearToEaseOut,
+    );
+  }
+
+  void openDrawer() {
+    _controller.animateTo(
+      _initialOffset,
+      duration: widget.duration,
+      curve: Curves.linearToEaseOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scrollable(
       dragStartBehavior: DragStartBehavior.start,
       axisDirection: AxisDirection.right,
-      controller: controller,
+      controller: _controller,
       physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
       viewportBuilder: (BuildContext context, ViewportOffset position) {
         return Viewport(
@@ -122,10 +127,11 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
               delegate: SliverChildListDelegate(
                 [
                   AnimatedBuilder(
-                    animation: controller,
+                    animation: _controller,
                     builder: (context, child) {
                       return Opacity(
-                        opacity: 1 - (controller.offset / initialOffset.ceil()),
+                        opacity:
+                            1 - (_controller.offset / _initialOffset.ceil()),
                         child: child,
                       );
                     },
@@ -139,17 +145,17 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
               delegate: SliverChildListDelegate(
                 [
                   AnimatedBuilder(
-                    animation: controller,
+                    animation: _controller,
                     builder: (context, child) {
                       return GestureDetector(
-                        onTap: controller.offset < initialOffset
+                        onTap: _controller.offset < _initialOffset
                             ? closeDrawer
                             : null,
                         child: AbsorbPointer(
-                          absorbing: controller.offset < initialOffset,
+                          absorbing: _controller.offset < _initialOffset,
                           child: Opacity(
                             opacity: 0.25 +
-                                (controller.offset / initialOffset.ceil()) *
+                                (_controller.offset / _initialOffset.ceil()) *
                                     0.75,
                             child: child,
                           ),
