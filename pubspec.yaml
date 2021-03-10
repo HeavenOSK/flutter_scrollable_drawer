@@ -4,14 +4,10 @@ version: 0.0.1
 author: Ryunosuke Watanabe
 homepage: https://github.com/HeavenOSK/flutter_scrollable_drawer
 environment:
-  sdk: ">=2.6.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 dependencies:
-#  flutter:
-#    sdk: flutter
-#  cloud_firestore:
-#  firebase:
-  simple_logger: ^1.5.1
-  meta:
+  flutter:
+    sdk: flutter
 dev_dependencies:
   flutter_test:
     sdk: flutter
