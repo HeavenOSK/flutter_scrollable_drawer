@@ -150,31 +150,31 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
               viewportFraction: 1,
               delegate: SliverChildListDelegate(
                 [
-                  GestureDetector(
-                    onTap: _openingDrawer
-                        ? () {
-                            if (widget.dismissible) {
-                              closeDrawer();
-                            }
-                          }
-                        : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: IgnorePointer(
-                      ignoring: _openingDrawer,
-                      child: AnimatedBuilder(
-                        animation: _controller!,
-                        builder: (context, child) {
-                          print(_bodyScrollingProgress);
-                          final wrapped = widget.bodyOverlayBuilder?.call(
-                            context,
-                            _bodyScrollingProgress,
-                            child!,
-                          );
-                          return wrapped ?? child!;
-                        },
-                        child: widget.body,
-                      ),
-                    ),
+                  AnimatedBuilder(
+                    animation: _controller!,
+                    builder: (context, child) {
+                      print(_bodyScrollingProgress);
+                      final wrapped = widget.bodyOverlayBuilder?.call(
+                        context,
+                        _bodyScrollingProgress,
+                        child!,
+                      );
+                      return GestureDetector(
+                        onTap: _openingDrawer
+                            ? () {
+                                if (widget.dismissible) {
+                                  closeDrawer();
+                                }
+                              }
+                            : null,
+                        behavior: HitTestBehavior.opaque,
+                        child: IgnorePointer(
+                          ignoring: _openingDrawer,
+                          child: wrapped ?? child!,
+                        ),
+                      );
+                    },
+                    child: widget.body,
                   ),
                 ],
               ),
