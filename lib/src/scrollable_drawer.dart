@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-typedef ScrollableDrawerOverlayBuilder = Widget Function(
+typedef _ProgressAnimationBuilder = Widget Function(
   BuildContext context,
   double scrollingProgress,
   Widget child,
@@ -15,8 +15,8 @@ class ScrollableDrawerScaffold extends StatefulWidget {
     this.dismissible = true,
     this.duration = _defaultDuration,
     this.drawerFraction = _defaultDrawerFraction,
-    this.bodyOverlayBuilder,
-    this.drawerOverlayBuilder,
+    this.bodyProgressAnimationBuilder,
+    this.drawerProgressAnimationBuilder,
     Key? key,
   })  : assert(0 < drawerFraction && drawerFraction <= 1),
         super(key: key);
@@ -26,8 +26,8 @@ class ScrollableDrawerScaffold extends StatefulWidget {
   final Widget body;
   final Widget drawer;
   final bool dismissible;
-  final ScrollableDrawerOverlayBuilder? bodyOverlayBuilder;
-  final ScrollableDrawerOverlayBuilder? drawerOverlayBuilder;
+  final _ProgressAnimationBuilder? bodyProgressAnimationBuilder;
+  final _ProgressAnimationBuilder? drawerProgressAnimationBuilder;
 
   static const _defaultDrawerFraction = .78;
   static const _defaultDuration = Duration(milliseconds: 160);
@@ -80,15 +80,19 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
   double? _bodyStartPosition;
   ScrollController? _controller;
   late final double _drawerFraction = widget.drawerFraction;
+  double? _currentDeviceWidth;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _bodyStartPosition ??= MediaQuery.of(context).size.width * _drawerFraction;
+    _currentDeviceWidth ??= MediaQuery.of(context).size.width;
+    _bodyStartPosition ??= _currentDeviceWidth! * _drawerFraction;
     _controller ??= ScrollController(
       initialScrollOffset: _bodyStartPosition!,
     );
   }
+
+  void _updateWidth(double currentDeviceWidth) {}
 
   bool get _openingDrawer => _drawerScrollingProgress >= 1;
 
@@ -124,6 +128,12 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (_currentDeviceWidth != width) {
+      _currentDeviceWidth = width;
+      _bodyStartPosition = _currentDeviceWidth! * _drawerFraction;
+    }
+
     return Scrollable(
       dragStartBehavior: DragStartBehavior.start,
       axisDirection: AxisDirection.right,
@@ -144,7 +154,8 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
                   AnimatedBuilder(
                     animation: _controller!,
                     builder: (context, child) {
-                      final wrapped = widget.drawerOverlayBuilder?.call(
+                      final wrapped =
+                          widget.drawerProgressAnimationBuilder?.call(
                         context,
                         _drawerScrollingProgress,
                         child!,
@@ -163,7 +174,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
                   AnimatedBuilder(
                     animation: _controller!,
                     builder: (context, child) {
-                      final wrapped = widget.bodyOverlayBuilder?.call(
+                      final wrapped = widget.bodyProgressAnimationBuilder?.call(
                         context,
                         _bodyScrollingProgress,
                         child!,

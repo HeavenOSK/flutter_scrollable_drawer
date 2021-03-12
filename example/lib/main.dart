@@ -44,7 +44,7 @@ class _HomeState extends State<Home> {
           );
         },
       ),
-      bodyOverlayBuilder: (context, scrollingProgress, child) {
+      bodyProgressAnimationBuilder: (context, scrollingProgress, child) {
         final opacity = (1 - scrollingProgress) * 0.6;
         return Stack(
           children: [
