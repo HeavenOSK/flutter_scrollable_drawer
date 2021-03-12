@@ -18,7 +18,8 @@ class ScrollableDrawerScaffold extends StatefulWidget {
     this.bodyOverlayBuilder,
     this.drawerOverlayBuilder,
     Key? key,
-  }) : super(key: key);
+  })  : assert(0 < drawerFraction && drawerFraction <= 1),
+        super(key: key);
 
   final Duration duration;
   final double drawerFraction;
@@ -40,31 +41,32 @@ class ScrollableDrawerScaffold extends StatefulWidget {
     throw FlutterError.fromParts(<DiagnosticsNode>[
       ErrorSummary(
           'ScrollableDrawerScaffold.of() called with a context that does not '
-          'contain a Scaffold.'),
+          'contain a ScrollableDrawerScaffold.'),
       ErrorDescription(
           'No ScrollableDrawerScaffold ancestor could be found starting from '
-          'the context that was passed to Scaffold.of(). This usually happens '
-          'when the context provided is from the same StatefulWidget as that '
-          'whose build function actually creates the ScrollableDrawerScaffold '
-          'widget being sought.'),
+          'the context that was passed to ScrollableDrawerScaffold.of(). This '
+          'usually happens when the context provided is from the same '
+          'StatefulWidget as that whose build function actually creates '
+          'the ScrollableDrawerScaffold widget being sought.'),
       ErrorHint(
           'There are several ways to avoid this problem. The simplest is to '
-          'use a Builder to get a context that is "under" the Scaffold. For '
-          'an example of this, please see the documentation for '
-          'ScrollableDrawerScaffold.of():\n'
+          'use a Builder to get a context that is "under" the '
+          'ScrollableDrawerScaffold. For an example of this, please see '
+          'the documentation for ScrollableDrawerScaffold.of():\n'
           // TODO(heavenOSK): Replace following url
           '  https://api.flutter.dev/flutter/material/Scaffold/of.html'),
       ErrorHint(
           'A more efficient solution is to split your build function into '
           'several widgets. This introduces a new context from which you can '
-          'obtain the Scaffold. In this solution, you would have an outer '
-          'widget that creates the ScrollableDrawerScaffold populated by '
-          'instances of your new inner widgets, and then in these inner '
-          'widgets you would use ScrollableDrawerScaffold.of().\n A less '
-          'elegant but more expedient solution is assign a GlobalKey to the '
-          'ScrollableDrawerScaffold, then use the key.currentState '
-          'property to obtain the ScrollableDrawerScaffold rather than using '
-          'the ScrollableDrawerScaffold.of() function.'),
+          'obtain the ScrollableDrawerScaffold. In this solution, you '
+          'would have an outer widget that creates the '
+          'ScrollableDrawerScaffold populated by instances of your new inner '
+          'widgets, and then in these inner widgets you would use '
+          'ScrollableDrawerScaffold.of().\n A less elegant but more expedient '
+          'solution is assign a GlobalKey to the ScrollableDrawerScaffold, '
+          'then use the key.currentState property to obtain the '
+          'ScrollableDrawerScaffold rather than using the '
+          'ScrollableDrawerScaffold.of() function.'),
       context.describeElement('The context used was')
     ]);
   }
@@ -77,12 +79,12 @@ class ScrollableDrawerScaffold extends StatefulWidget {
 class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
   double? _bodyStartPosition;
   ScrollController? _controller;
+  late final double _drawerFraction = widget.drawerFraction;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _bodyStartPosition ??=
-        MediaQuery.of(context).size.width * widget.drawerFraction;
+    _bodyStartPosition ??= MediaQuery.of(context).size.width * _drawerFraction;
     _controller ??= ScrollController(
       initialScrollOffset: _bodyStartPosition!,
     );
@@ -90,8 +92,17 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   bool get _openingDrawer => _drawerScrollingProgress >= 1;
 
-  double get _drawerScrollingProgress =>
-      (_bodyStartPosition! - _controller!.offset) / _bodyStartPosition!;
+  double get _drawerScrollingProgress {
+    final rate =
+        (_bodyStartPosition! - _controller!.offset) / _bodyStartPosition!;
+    if (rate < 0) {
+      return 0;
+    } else if (1 < rate) {
+      return 1;
+    } else {
+      return rate;
+    }
+  }
 
   double get _bodyScrollingProgress => 1 - _drawerScrollingProgress;
 
@@ -119,7 +130,6 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
       controller: _controller,
       physics: const PageScrollPhysics(parent: ClampingScrollPhysics()),
       viewportBuilder: (BuildContext context, ViewportOffset position) {
-        print(position);
         return Viewport(
           cacheExtent: 1,
           cacheExtentStyle: CacheExtentStyle.viewport,
@@ -127,21 +137,24 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
           offset: position,
           slivers: <Widget>[
             SliverFillViewport(
-              viewportFraction: widget.drawerFraction,
+              viewportFraction: _drawerFraction,
               padEnds: false,
               delegate: SliverChildListDelegate(
                 [
-                  AnimatedBuilder(
-                    animation: _controller!,
-                    builder: (context, child) {
-                      final wrapped = widget.drawerOverlayBuilder?.call(
-                        context,
-                        _drawerScrollingProgress,
-                        child!,
-                      );
-                      return wrapped ?? child!;
-                    },
-                    child: widget.drawer,
+                  Material(
+                    type: MaterialType.transparency,
+                    child: AnimatedBuilder(
+                      animation: _controller!,
+                      builder: (context, child) {
+                        final wrapped = widget.drawerOverlayBuilder?.call(
+                          context,
+                          _drawerScrollingProgress,
+                          child!,
+                        );
+                        return wrapped ?? child!;
+                      },
+                      child: widget.drawer,
+                    ),
                   ),
                 ],
               ),
@@ -150,31 +163,33 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
               viewportFraction: 1,
               delegate: SliverChildListDelegate(
                 [
-                  AnimatedBuilder(
-                    animation: _controller!,
-                    builder: (context, child) {
-                      print(_bodyScrollingProgress);
-                      final wrapped = widget.bodyOverlayBuilder?.call(
-                        context,
-                        _bodyScrollingProgress,
-                        child!,
-                      );
-                      return GestureDetector(
-                        onTap: _openingDrawer
-                            ? () {
-                                if (widget.dismissible) {
-                                  closeDrawer();
+                  Material(
+                    type: MaterialType.transparency,
+                    child: AnimatedBuilder(
+                      animation: _controller!,
+                      builder: (context, child) {
+                        final wrapped = widget.bodyOverlayBuilder?.call(
+                          context,
+                          _bodyScrollingProgress,
+                          child!,
+                        );
+                        return GestureDetector(
+                          onTap: _openingDrawer
+                              ? () {
+                                  if (widget.dismissible) {
+                                    closeDrawer();
+                                  }
                                 }
-                              }
-                            : null,
-                        behavior: HitTestBehavior.opaque,
-                        child: IgnorePointer(
-                          ignoring: _openingDrawer,
-                          child: wrapped ?? child!,
-                        ),
-                      );
-                    },
-                    child: widget.body,
+                              : null,
+                          behavior: HitTestBehavior.opaque,
+                          child: IgnorePointer(
+                            ignoring: _openingDrawer,
+                            child: wrapped ?? child!,
+                          ),
+                        );
+                      },
+                      child: widget.body,
+                    ),
                   ),
                 ],
               ),

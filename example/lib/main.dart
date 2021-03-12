@@ -59,7 +59,34 @@ class _HomeState extends State<Home> {
           ],
         );
       },
-      drawer: Container(color: Colors.deepPurple),
+      drawer: Builder(
+        builder: (context) {
+          final drawerScaffold = ScrollableDrawerScaffold.of(context);
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              centerTitle: false,
+              elevation: 1,
+              title: Text(
+                'Drawer',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+            body: SafeArea(
+              child: ListView(
+                children: [
+                  ListTile(
+                    title: Text('Close drawer'),
+                    onTap: () {
+                      drawerScaffold.closeDrawer();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
