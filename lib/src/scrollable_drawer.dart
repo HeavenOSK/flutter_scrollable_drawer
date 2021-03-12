@@ -81,22 +81,14 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_bodyStartPosition == null) {
-      final initialOffset =
-          MediaQuery.of(context).size.width * widget.drawerFraction;
-      _bodyStartPosition = initialOffset;
-      _controller = ScrollController(initialScrollOffset: initialOffset)
-        ..addListener(
-          () {
-            if (mounted) {
-              setState(() {});
-            }
-          },
-        );
-    }
+    _bodyStartPosition ??=
+        MediaQuery.of(context).size.width * widget.drawerFraction;
+    _controller ??= ScrollController(
+      initialScrollOffset: _bodyStartPosition!,
+    );
   }
 
-  bool get _openingDrawer => _controller!.offset <= 0;
+  bool get _openingDrawer => _drawerScrollingProgress >= 1;
 
   double get _drawerScrollingProgress =>
       (_bodyStartPosition! - _controller!.offset) / _bodyStartPosition!;
@@ -172,6 +164,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
                       child: AnimatedBuilder(
                         animation: _controller!,
                         builder: (context, child) {
+                          print(_bodyScrollingProgress);
                           final wrapped = widget.bodyOverlayBuilder?.call(
                             context,
                             _bodyScrollingProgress,
@@ -190,5 +183,11 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller?.dispose();
   }
 }
