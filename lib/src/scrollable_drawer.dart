@@ -126,6 +126,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    _checkOrientation();
     return Scrollable(
       dragStartBehavior: DragStartBehavior.start,
       axisDirection: AxisDirection.right,
@@ -195,6 +196,20 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
         );
       },
     );
+  }
+
+  // It's to take care of the device when its orientation is changed.
+  void _checkOrientation() {
+    final width = MediaQuery.of(context).size.width;
+    if (_currentDeviceWidth != width) {
+      final drawerOpening = _drawerOpening;
+      _currentDeviceWidth = width;
+      if (drawerOpening) {
+        openDrawer();
+      } else {
+        closeDrawer();
+      }
+    }
   }
 
   @override
