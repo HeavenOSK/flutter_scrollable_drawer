@@ -77,28 +77,26 @@ class ScrollableDrawerScaffold extends StatefulWidget {
 }
 
 class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
-  double? _bodyStartPosition;
   ScrollController? _controller;
   late final double _drawerFraction = widget.drawerFraction;
   double? _currentDeviceWidth;
+
+  double get _bodyStartPosition => _currentDeviceWidth! * _drawerFraction;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _currentDeviceWidth ??= MediaQuery.of(context).size.width;
-    _bodyStartPosition ??= _currentDeviceWidth! * _drawerFraction;
     _controller ??= ScrollController(
-      initialScrollOffset: _bodyStartPosition!,
+      initialScrollOffset: _bodyStartPosition,
     );
   }
 
-  void _updateWidth(double currentDeviceWidth) {}
-
-  bool get _openingDrawer => _drawerScrollingProgress >= 1;
+  bool get _drawerOpening => _drawerScrollingProgress >= 1;
 
   double get _drawerScrollingProgress {
     final rate =
-        (_bodyStartPosition! - _controller!.offset) / _bodyStartPosition!;
+        (_bodyStartPosition - _controller!.offset) / _bodyStartPosition;
     if (rate < 0) {
       return 0;
     } else if (1 < rate) {
@@ -112,7 +110,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   void closeDrawer() {
     _controller!.animateTo(
-      _bodyStartPosition!,
+      _bodyStartPosition,
       duration: widget.duration,
       curve: Curves.easeOut,
     );
@@ -128,12 +126,6 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (_currentDeviceWidth != width) {
-      _currentDeviceWidth = width;
-      _bodyStartPosition = _currentDeviceWidth! * _drawerFraction;
-    }
-
     return Scrollable(
       dragStartBehavior: DragStartBehavior.start,
       axisDirection: AxisDirection.right,
@@ -180,7 +172,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
                         child!,
                       );
                       return GestureDetector(
-                        onTap: _openingDrawer
+                        onTap: _drawerOpening
                             ? () {
                                 if (widget.dismissible) {
                                   closeDrawer();
@@ -189,7 +181,7 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
                             : null,
                         behavior: HitTestBehavior.opaque,
                         child: IgnorePointer(
-                          ignoring: _openingDrawer,
+                          ignoring: _drawerOpening,
                           child: wrapped ?? child!,
                         ),
                       );
