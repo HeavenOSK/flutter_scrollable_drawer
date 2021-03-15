@@ -94,17 +94,9 @@ class ScrollableDrawerScaffoldState extends State<ScrollableDrawerScaffold> {
 
   bool get _drawerOpening => _drawerScrollingProgress >= 1;
 
-  double get _drawerScrollingProgress {
-    final rate =
-        (_bodyStartPosition - _controller!.offset) / _bodyStartPosition;
-    if (rate < 0) {
-      return 0;
-    } else if (1 < rate) {
-      return 1;
-    } else {
-      return rate;
-    }
-  }
+  double get _drawerScrollingProgress =>
+      ((_bodyStartPosition - _controller!.offset) / _bodyStartPosition)
+          .clamp(0, 1);
 
   double get _bodyScrollingProgress => 1 - _drawerScrollingProgress;
 
